@@ -58,7 +58,7 @@ namespace RESTful.API.Controllers
         }
 
 
-        [HttpDelete]
+        [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int Id)
         {
             return Ok(await _postRepository.Delete(Id));
