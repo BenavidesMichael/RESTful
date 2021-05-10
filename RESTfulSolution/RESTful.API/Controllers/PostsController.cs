@@ -13,20 +13,20 @@ namespace RESTful.API.Controllers
     [ApiController]
     public class PostsController : ControllerBase
     {
-        private readonly IPostRepository _postRepository;
         private readonly IMapper _mapper;
+        private readonly IPostService _postService;
 
-        public PostsController(IPostRepository postRepository, IMapper mapper)
+        public PostsController(IMapper mapper, IPostService postService)
         {
-            this._postRepository = postRepository;
             this._mapper = mapper;
+            this._postService = postService;
         }
 
 
         [HttpGet]
         public async Task<IActionResult> Get()
         {
-            var postsDB = await _postRepository.GetAllPosts();
+            var postsDB = await _postService.GetAllPosts();
             var postDto = _mapper.Map<IEnumerable<PostDto>>(postsDB);
             var response = new ApiResponse<IEnumerable<PostDto>>(postDto);
             return Ok(response);
@@ -36,7 +36,7 @@ namespace RESTful.API.Controllers
         [HttpGet("{id}")]
         public async Task<IActionResult> Get(int id)
         {
-            var postDB = await _postRepository.GetById(id);
+            var postDB = await _postService.GetById(id);
             var postDto = _mapper.Map<PostDto>(postDB);
 
             var response = new ApiResponse<PostDto>(postDto);
@@ -48,7 +48,7 @@ namespace RESTful.API.Controllers
         public async Task<IActionResult> Post(PostDto model)
         {
             var post = _mapper.Map<Post>(model);
-            await _postRepository.Create(post);
+            await _postService.Create(post);
             return Ok();
         }
 
@@ -59,7 +59,7 @@ namespace RESTful.API.Controllers
             var post = _mapper.Map<Post>(model);
             post.Id = Id;
 
-            var result = await _postRepository.Update(post);
+            var result = await _postService.Update(post);
             var response = new ApiResponse<bool>(result);
             
             return Ok(response);
@@ -69,7 +69,7 @@ namespace RESTful.API.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int Id)
         {
-            var result = await _postRepository.Delete(Id);
+            var result = await _postService.Delete(Id);
             var response = new ApiResponse<bool>(result);
 
             return Ok(response);
