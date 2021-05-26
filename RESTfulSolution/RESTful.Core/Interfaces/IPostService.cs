@@ -6,10 +6,10 @@ namespace RESTful.Core.Interfaces
 {
     public interface IPostService
     {
-        Task<IEnumerable<Post>> GetAllPosts();
-        Task<Post> GetById(int id);
-        Task Create(Post model);
-        Task<bool> Update(Post model);
-        Task<bool> Delete(int Id);
+        IEnumerable<Post> GetAllPosts();
+        Task<Post> GetByIdAsync(int id);
+        Task CreateAsync(Post model);
+        Task UpdateAsync(Post model);
+        Task DeleteAsync(int Id);
     }
 }

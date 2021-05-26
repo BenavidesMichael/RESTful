@@ -1,7 +1,9 @@
 ﻿using RESTful.Core.Entities;
+using RESTful.Core.Execptions;
 using RESTful.Core.Interfaces;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace RESTful.Core.Services
@@ -11,50 +13,67 @@ namespace RESTful.Core.Services
     // ici y aurra Que 3 clsses donc pas trop besoin
     public class PostService : IPostService
     {
-        private readonly IPostRepository _postRepository;
-        private readonly IUserRepository _userRepository;
+        private readonly IUnitOfWork _unitOfWork;
 
-        public PostService(IPostRepository postRepository, IUserRepository userRepository)
+        public PostService(IUnitOfWork unitOfWork)
         {
-            this._postRepository = postRepository;
-            this._userRepository = userRepository;
+            this._unitOfWork = unitOfWork;
         }
 
 
-        public async Task<IEnumerable<Post>> GetAllPosts()
+        public IEnumerable<Post> GetAllPosts()
         {
-            return await _postRepository.GetAllPosts();
+            return _unitOfWork.PostRepository.GetAll().ToList();
         }
 
 
-        public async Task<Post> GetById(int id)
+        public async Task<Post> GetByIdAsync(int id)
         {
-            return await _postRepository.GetById(id);
+            return await _unitOfWork.PostRepository.GetByIdAsync(id);
         }
 
 
-        public async Task Create(Post model)
+        public async Task CreateAsync(Post model)
         {
-            var user = await _userRepository.GetById(model.UserId);
+            var user = await _unitOfWork.UserRepository.GetByIdAsync(model.UserId);
+            var userPosts = await _unitOfWork.PostRepository.GetAllPostsByUser(model.UserId);
 
             if (user == null)
             {
-                throw new Exception("user dosen't exist");
+                throw new BusinessException("user dosen't exist");
             }
 
-            await _postRepository.Create(model);
+
+            if (userPosts?.Count() < 10)
+            {
+                var lastPost = userPosts.TakeLast(10).OrderByDescending(x => x.Date).FirstOrDefault();
+                if ((DateTime.Now - lastPost.Date).TotalDays > 7)
+                {
+                    throw new BusinessException("You are no able to publish the post");
+                }
+            }
+
+            if (model.Description.Contains("sex".ToLower()))
+            {
+                throw new BusinessException("content not allowed");
+            }
+
+            await _unitOfWork.PostRepository.CreateAsync(model);
+            await _unitOfWork.SaveChangesAsync();
         }
 
 
-        public async Task<bool> Update(Post model)
+        public async Task UpdateAsync(Post model)
         {
-            return await _postRepository.Update(model);
+            _unitOfWork.PostRepository.Update(model);
+            await _unitOfWork.SaveChangesAsync();
         }
 
 
-        public async Task<bool> Delete(int Id)
+        public async Task DeleteAsync(int Id)
         {
-            return await _postRepository.Delete(Id);
+            await _unitOfWork.PostRepository.DeleteAsync(Id);
+            await _unitOfWork.SaveChangesAsync();
         }
 
     }

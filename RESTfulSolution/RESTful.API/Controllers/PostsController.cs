@@ -24,19 +24,24 @@ namespace RESTful.API.Controllers
 
 
         [HttpGet]
-        public async Task<IActionResult> Get()
+        public IActionResult Get()
         {
-            var postsDB = await _postService.GetAllPosts();
+            var postsDB = _postService.GetAllPosts();
             var postDto = _mapper.Map<IEnumerable<PostDto>>(postsDB);
             var response = new ApiResponse<IEnumerable<PostDto>>(postDto);
             return Ok(response);
         }
 
 
-        [HttpGet("{id}")]
-        public async Task<IActionResult> Get(int id)
+        /// <summary>
+        /// get post By Id 
+        /// </summary>
+        /// <param name="id"> post Id</param>
+        /// <returns></returns>
+        [HttpGet("{id}", Name = nameof(GetPost))]
+        public async Task<IActionResult> GetPost(int id)
         {
-            var postDB = await _postService.GetById(id);
+            var postDB = await _postService.GetByIdAsync(id);
             var postDto = _mapper.Map<PostDto>(postDB);
 
             var response = new ApiResponse<PostDto>(postDto);
@@ -48,7 +53,7 @@ namespace RESTful.API.Controllers
         public async Task<IActionResult> Post(PostDto model)
         {
             var post = _mapper.Map<Post>(model);
-            await _postService.Create(post);
+            await _postService.CreateAsync(post);
             return Ok();
         }
 
@@ -59,9 +64,9 @@ namespace RESTful.API.Controllers
             var post = _mapper.Map<Post>(model);
             post.Id = Id;
 
-            var result = await _postService.Update(post);
-            var response = new ApiResponse<bool>(result);
-            
+            await _postService.UpdateAsync(post);
+            var response = new ApiResponse<bool>(true);
+
             return Ok(response);
         }
 
@@ -69,8 +74,8 @@ namespace RESTful.API.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int Id)
         {
-            var result = await _postService.Delete(Id);
-            var response = new ApiResponse<bool>(result);
+            await _postService.DeleteAsync(Id);
+            var response = new ApiResponse<bool>(true);
 
             return Ok(response);
         }

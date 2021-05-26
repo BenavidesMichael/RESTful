@@ -5,7 +5,9 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using RESTful.Infrastructure.Extensions;
+using RESTful.Infrastructure.Filters;
 using System;
+using System.Reflection;
 
 namespace RESTful.API
 {
@@ -27,9 +29,9 @@ namespace RESTful.API
 
             services.AddRepositories();
 
-            services.AddSwagger();
+            services.AddSwagger($"{Assembly.GetExecutingAssembly().GetName().Name}.xml");
             
-            services.AddControllers()
+            services.AddControllers(opt => opt.Filters.Add<GlobalExceptionFilter>())
                     .AddFluentValidation(opt => opt.RegisterValidatorsFromAssemblies(AppDomain.CurrentDomain.GetAssemblies()));
         }
 
