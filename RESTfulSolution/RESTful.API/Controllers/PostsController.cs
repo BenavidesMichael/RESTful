@@ -4,7 +4,10 @@ using RESTful.API.Responses;
 using RESTful.Core.DTOs;
 using RESTful.Core.Entities;
 using RESTful.Core.Interfaces;
+using RESTful.Core.QueryFilters;
+using System;
 using System.Collections.Generic;
+using System.Net;
 using System.Threading.Tasks;
 
 namespace RESTful.API.Controllers
@@ -24,9 +27,11 @@ namespace RESTful.API.Controllers
 
 
         [HttpGet]
-        public IActionResult Get()
+        [ProducesResponseType((int)HttpStatusCode.OK, Type = typeof(ApiResponse<IEnumerable<PostDto>>))]
+        [ProducesResponseType((int)HttpStatusCode.BadRequest, Type = typeof(ApiResponse<IEnumerable<PostDto>>))]
+        public IActionResult Get([FromQuery] PostFilter model)
         {
-            var postsDB = _postService.GetAllPosts();
+            var postsDB = _postService.GetAllPosts(model);
             var postDto = _mapper.Map<IEnumerable<PostDto>>(postsDB);
             var response = new ApiResponse<IEnumerable<PostDto>>(postDto);
             return Ok(response);

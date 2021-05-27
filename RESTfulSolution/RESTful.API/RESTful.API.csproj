@@ -20,4 +20,8 @@
     <ProjectReference Include="..\RESTful.Infrastructure\RESTful.Infrastructure.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Notes\" />
+  </ItemGroup>
+
 </Project>

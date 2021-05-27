@@ -1,6 +1,7 @@
 ﻿using RESTful.Core.Entities;
 using RESTful.Core.Execptions;
 using RESTful.Core.Interfaces;
+using RESTful.Core.QueryFilters;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -21,9 +22,26 @@ namespace RESTful.Core.Services
         }
 
 
-        public IEnumerable<Post> GetAllPosts()
+        public IEnumerable<Post> GetAllPosts(PostFilter model)
         {
-            return _unitOfWork.PostRepository.GetAll().ToList();
+            var postList = _unitOfWork.PostRepository.GetAll();
+
+            if (model.UserId != null)
+            {
+                postList = postList.Where(x => x.UserId == model.UserId);
+            }
+
+            if (model.Date != null)
+            {
+                postList = postList.Where(x => x.Date.ToShortDateString() == model.Date?.ToShortDateString());
+            }
+
+            if (model.Description != null)
+            {
+                postList = postList.Where(x => x.Description.ToLower().Contains(model.Description.ToLower()));
+            }
+
+            return postList;
         }
 
 

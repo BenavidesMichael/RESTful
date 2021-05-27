@@ -14,8 +14,8 @@ namespace RESTful.Infrastructure.Filters
                 var exception = (BusinessException)context.Exception;
                 var validation = new
                 {
-                    Status = 400,
-                    Title = "Bad Request",
+                    Status = (int)HttpStatusCode.BadRequest,
+                    Title = HttpStatusCode.BadRequest.ToString(),
                     Detail = exception.Message
                 };
 
