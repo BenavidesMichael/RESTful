@@ -1,9 +1,11 @@
-﻿using RESTful.Core.Entities;
+﻿using Microsoft.Extensions.Options;
+using RESTful.Core.DTOs;
+using RESTful.Core.Entities;
 using RESTful.Core.Execptions;
+using RESTful.Core.Helper;
 using RESTful.Core.Interfaces;
 using RESTful.Core.QueryFilters;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -15,15 +17,20 @@ namespace RESTful.Core.Services
     public class PostService : IPostService
     {
         private readonly IUnitOfWork _unitOfWork;
+        private readonly PaginationSetting _paginationSetting;
 
-        public PostService(IUnitOfWork unitOfWork)
+        public PostService(IUnitOfWork unitOfWork, IOptions<PaginationSetting> paginationSetting)
         {
             this._unitOfWork = unitOfWork;
+            _paginationSetting = paginationSetting.Value;
         }
 
 
-        public IEnumerable<Post> GetAllPosts(PostFilter model)
+        public PagedListHelper<Post> GetAllPosts(PostFilter model)
         {
+            model.PageNumber = model.PageNumber == 0 ? _paginationSetting.DefaultPageNumber : model.PageNumber;
+            model.PageSize = model.PageSize == 0 ? _paginationSetting.DefaultPageSize : model.PageSize;
+
             var postList = _unitOfWork.PostRepository.GetAll();
 
             if (model.UserId != null)
@@ -41,7 +48,9 @@ namespace RESTful.Core.Services
                 postList = postList.Where(x => x.Description.ToLower().Contains(model.Description.ToLower()));
             }
 
-            return postList;
+            var result = PagedListHelper<Post>.Create(postList, model.PageNumber, model.PageSize);
+
+            return result;
         }
 
 
@@ -65,7 +74,7 @@ namespace RESTful.Core.Services
             if (userPosts?.Count() < 10)
             {
                 var lastPost = userPosts.TakeLast(10).OrderByDescending(x => x.Date).FirstOrDefault();
-                if ((DateTime.Now - lastPost.Date).TotalDays > 7)
+                if ((DateTime.Now - lastPost.Date).TotalDays < 7)
                 {
                     throw new BusinessException("You are no able to publish the post");
                 }

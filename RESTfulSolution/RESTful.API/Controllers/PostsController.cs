@@ -5,35 +5,61 @@ using RESTful.Core.DTOs;
 using RESTful.Core.Entities;
 using RESTful.Core.Interfaces;
 using RESTful.Core.QueryFilters;
-using System;
+using RESTful.Infrastructure.Interface;
 using System.Collections.Generic;
 using System.Net;
 using System.Threading.Tasks;
 
 namespace RESTful.API.Controllers
 {
+
+    [Produces("application/json")] // Accept header que les json
     [Route("api/[controller]")]
     [ApiController]
     public class PostsController : ControllerBase
     {
         private readonly IMapper _mapper;
         private readonly IPostService _postService;
+        private readonly IUrlService _urlService;
 
-        public PostsController(IMapper mapper, IPostService postService)
+        public PostsController(IMapper mapper, IPostService postService, IUrlService urlService)
         {
             this._mapper = mapper;
             this._postService = postService;
+            this._urlService = urlService;
         }
 
 
-        [HttpGet]
+        /// <summary>
+        /// Retrieve all posts
+        /// </summary>
+        /// <param name="model">filters to apply</param>
+        /// <returns></returns>
+        [HttpGet(Name = nameof(GetPosts))]
         [ProducesResponseType((int)HttpStatusCode.OK, Type = typeof(ApiResponse<IEnumerable<PostDto>>))]
         [ProducesResponseType((int)HttpStatusCode.BadRequest, Type = typeof(ApiResponse<IEnumerable<PostDto>>))]
-        public IActionResult Get([FromQuery] PostFilter model)
+        public IActionResult GetPosts([FromQuery] PostFilter model)
         {
-            var postsDB = _postService.GetAllPosts(model);
-            var postDto = _mapper.Map<IEnumerable<PostDto>>(postsDB);
-            var response = new ApiResponse<IEnumerable<PostDto>>(postDto);
+            var postsData = _postService.GetAllPosts(model);
+            var postDto = _mapper.Map<IEnumerable<PostDto>>(postsData);
+
+            var metadata = new MetadataDto
+            {
+                TotalItems = postsData.TotalItem,
+                PageSize = postsData.PageSize,
+                CurrentPage = postsData.CurrentPage,
+                TotalPage = postsData.TotalPage,
+                HasPreviousPage = postsData.HasPreviousPage,
+                HasNextPage = postsData.HasNextPage,
+                NextPageUrl = _urlService.GetPostPaginationUrl(model, Url.RouteUrl(nameof(GetPosts))).ToString(),
+                PreviousPageUrl = _urlService.GetPostPaginationUrl(model, Url.RouteUrl(nameof(GetPosts))).ToString(),
+            };
+
+            var response = new ApiResponse<IEnumerable<PostDto>>(postDto)
+            {
+                Metadata = metadata,
+            };
+
             return Ok(response);
         }
 
@@ -59,7 +85,11 @@ namespace RESTful.API.Controllers
         {
             var post = _mapper.Map<Post>(model);
             await _postService.CreateAsync(post);
-            return Ok();
+
+            model = _mapper.Map<PostDto>(post);
+            var response = new ApiResponse<PostDto>(model);
+
+            return Ok(response);
         }
 
 

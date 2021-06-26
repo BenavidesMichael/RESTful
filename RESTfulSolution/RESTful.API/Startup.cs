@@ -8,6 +8,7 @@ using RESTful.Infrastructure.Extensions;
 using RESTful.Infrastructure.Filters;
 using System;
 using System.Reflection;
+using System.Text.Json.Serialization;
 
 namespace RESTful.API
 {
@@ -29,10 +30,16 @@ namespace RESTful.API
 
             services.AddRepositories();
 
+            services.GetAppSettingsValues(_configuration);
+
             services.AddSwagger($"{Assembly.GetExecutingAssembly().GetName().Name}.xml");
-            
+
             services.AddControllers(opt => opt.Filters.Add<GlobalExceptionFilter>())
-                    .AddFluentValidation(opt => opt.RegisterValidatorsFromAssemblies(AppDomain.CurrentDomain.GetAssemblies()));
+                    .AddFluentValidation(opt => opt.RegisterValidatorsFromAssemblies(AppDomain.CurrentDomain.GetAssemblies()))
+                    .AddJsonOptions(opt =>
+                    {
+                        opt.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
+                    });
         }
 
 

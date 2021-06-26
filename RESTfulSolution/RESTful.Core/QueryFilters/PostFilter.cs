@@ -1,8 +1,9 @@
-﻿using System;
+﻿using RESTful.Core.DTOs;
+using System;
 
 namespace RESTful.Core.QueryFilters
 {
-    public class PostFilter
+    public class PostFilter : PaginationDto
     {
         public int? UserId { get; set; }
         public DateTime? Date { get; set; }

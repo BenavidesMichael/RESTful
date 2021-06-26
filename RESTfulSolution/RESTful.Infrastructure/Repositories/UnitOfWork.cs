@@ -1,7 +1,6 @@
 ﻿using RESTful.Core.Entities;
 using RESTful.Core.Interfaces;
 using RESTful.Infrastructure.Data;
-using System;
 using System.Threading.Tasks;
 
 namespace RESTful.Infrastructure.Repositories
